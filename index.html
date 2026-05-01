@@ -232,14 +232,14 @@
     <h1>Connect your store</h1>
     <p>Enter your Clover credentials to load your sales, orders, and customer analytics.</p>
 
-    <!-- <div class="row-2"> -->
-      <!-- <div class="field">
+    <div class="row-2">
+      <div class="field">
         <label>Environment</label>
         <select id="envSelect">
           <option value="https://api.clover.com">Production</option>
           <option value="https://apisandbox.dev.clover.com">Sandbox</option>
-        </select> -->
-      <!-- </div> -->
+        </select>
+      </div>
       <div class="field">
         <label>Date range</label>
         <select id="rangeSelect">
@@ -365,7 +365,7 @@
   }
 
   async function cloverGet(base, mid, token, path, params = {}) {
-    const url = new URL('https://clover-proxy.ari-maggi.workers.dev/${mid}/${path}`);
+    const url = new URL(`https://clover-proxy.ari-maggi.workers.dev/${mid}/${path}`);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     const r = await fetch(url.toString(), {
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
@@ -383,7 +383,7 @@
   async function connect() {
     const mid    = document.getElementById('merchantId').value.trim();
     const token  = document.getElementById('apiKey').value.trim();
-    // const base   = document.getElementById('envSelect').value;
+    const base   = document.getElementById('envSelect').value;
     const days   = parseInt(document.getElementById('rangeSelect').value);
     const errBox = document.getElementById('errorBox');
     errBox.style.display = 'none';
@@ -407,9 +407,9 @@
       const filter  = `createdTime>=${startMs}`;
 
       const [ordersResp, customersResp, paymentsResp] = await Promise.all([
-        cloverGet(mid, token, 'orders',    { limit: 1000, filter }),
-        cloverGet(mid, token, 'customers', { limit: 200 }),
-        cloverGet(mid, token, 'payments',  { limit: 1000, filter })
+        cloverGet(base, mid, token, 'orders',    { limit: 1000, filter }),
+        cloverGet(base, mid, token, 'customers', { limit: 200 }),
+        cloverGet(base, mid, token, 'payments',  { limit: 1000, filter })
       ]);
 
       const orders    = ordersResp.elements    || [];
