@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clover Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #f0ede8;
+      --border: rgba(0,0,0,0.1);
+      --border-strong: rgba(0,0,0,0.18);
+      --text: #1a1916;
+      --text-muted: #6b6860;
+      --text-faint: #9e9b94;
+      --accent: #1a5c3a;
+      --accent-light: #e8f3ec;
+      --accent2: #c45c1a;
+      --accent2-light: #fdf0e8;
+      --blue: #1a3d6e;
+      --blue-light: #e8eef8;
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .setup-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.75rem;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .logo-text { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+    .logo-text span { color: var(--text-muted); font-weight: 400; }
+
+    .setup-card h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; margin-bottom: 6px; }
+    .setup-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 2rem; }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .field input, .field select {
+      width: 100%; padding: 10px 13px;
+      font-family: inherit; font-size: 14px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,92,58,0.12);
+    }
+
+    .field input[type="password"] { font-family: 'DM Mono', monospace; letter-spacing: 2px; font-size: 13px; }
+
+    .btn {
+      width: 100%; padding: 11px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      cursor: pointer; margin-top: 6px;
+      transition: background .15s, transform .1s;
+    }
+    .btn:hover { background: #154d31; }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { background: var(--text-faint); cursor: not-allowed; }
+
+    .error {
+      background: #fef2f2; border: 1px solid #fca5a5;
+      border-radius: var(--radius); padding: 11px 14px;
+      font-size: 13px; color: #b91c1c; margin-top: 1rem;
+      display: none;
+    }
+
+    .dash { display: none; }
+    .dash.on { display: block; }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+      position: sticky; top: 0; z-index: 10;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-left .logo-text { font-size: 15px; }
+
+    .mid-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px; color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px; padding: 3px 9px;
+    }
+
+    .disconnect {
+      font-size: 13px; font-family: inherit;
+      color: var(--text-muted); background: none;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius); padding: 5px 14px;
+      cursor: pointer; transition: background .15s;
+    }
+    .disconnect:hover { background: var(--surface2); }
+
+    .content { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+    .spinner { text-align: center; padding: 5rem 0; color: var(--text-muted); font-size: 14px; }
+    .spinner-ring {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .metric-label { font-size: 11px; font-weight: 500; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .metric-value { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); }
+    .metric-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .metric-card.green .metric-value { color: var(--accent); }
+    .metric-card.orange .metric-value { color: var(--accent2); }
+    .metric-card.blue .metric-value { color: var(--blue); }
+
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .chart-header { margin-bottom: 1.25rem; }
+    .chart-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .chart-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: var(--text-muted); }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    .chart-wrap { position: relative; }
+
+    .footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--text-faint); }
+
+    @media (max-width: 800px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .topbar { padding: 0 1rem; }
+      .content { padding: 1.25rem; }
+    }
+
+    @media (max-width: 480px) {
+      .metrics { grid-template-columns: 1fr; }
+      .setup-card { padding: 1.75rem; }
+      .row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SETUP VIEW -->
+<div class="setup-wrap" id="setupView">
+  <div class="setup-card">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 8h18v2H3zm0 8h18v2H3z"/></svg>
+      </div>
+      <div class="logo-text">Clover <span>Dashboard</span></div>
+    </div>
+
+    <h1>Connect your store</h1>
+    <p>Enter your Clover credentials to load your sales, orders, and customer analytics.</p>
+
+    <div class="row-2">
+      <div class="field">
+        <label>Environment</label>
+        <select id="envSelect">
+          <option value="https://api.clover.com">Production</option>
+          <option value="https://apisandbox.dev.clover.com">Sandbox</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Date range</label>
+        <select id="rangeSelect">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Merchant ID</label>
+      <input type="text" id="merchantId" placeholder="e.g. ABCD1234EFGH5678" autocomplete="off" spellcheck="false" />
+    </div>
+
+    <div class="field">
+      <label>API key / access token</label>
+      <input type="password" id="apiKey" placeholder="Paste your token here" autocomplete="off" />
+    </div>
+
+    <button class="btn" id="connectBtn" onclick="connect()">Connect &amp; load data</button>
+    <div class="error" id="errorBox"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dash" id="dashView">
+  <nav class="topbar">
+    <div class="topbar-left">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 8h18v2H3zm0 8h18v2H3z"/></svg>
+        </div>
+        <div class="logo-text">Clover <span>Dashboard</span></div>
+      </div>
+      <span class="mid-badge" id="merchantBadge"></span>
+    </div>
+    <button class="disconnect" onclick="reset()">&#8592; Disconnect</button>
+  </nav>
+
+  <div class="content">
+    <div id="spinner" class="spinner">
+      <div class="spinner-ring"></div>
+      Loading your store data&hellip;
+    </div>
+
+    <div id="dashContent" style="display:none;">
+      <div class="metrics" id="metricsRow"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Revenue by day</div>
+            <div class="chart-sub" id="revSubtitle"></div>
+          </div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="revenueChart" role="img" aria-label="Line chart showing daily revenue"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Orders by day</div>
+            <div class="chart-sub" id="ordSubtitle"></div>
+          </div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="ordersChart" role="img" aria-label="Bar chart showing daily order count"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:14px;">
+        <div class="chart-header">
+          <div class="chart-title">Top customers by total spend</div>
+          <div class="chart-sub">Highest cumulative order value per customer</div>
+        </div>
+        <div class="chart-wrap" id="topCustWrap">
+          <canvas id="topCustChart" role="img" aria-label="Horizontal bar chart of top 10 customers by spend"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:14px;">
+        <div class="chart-header">
+          <div class="chart-title">Revenue by payment type</div>
+          <div class="chart-sub">Breakdown of how customers are paying</div>
+        </div>
+        <div class="legend" id="payLegend"></div>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="payChart" role="img" aria-label="Doughnut chart of revenue by payment type"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Clover Dashboard &mdash; data fetched live from the Clover REST API v3</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  let charts = [];
+
+  function fmt(cents) {
+    return '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtShort(dollars) {
+    if (dollars >= 1000) return '$' + (dollars / 1000).toFixed(1) + 'k';
+    return '$' + Math.round(dollars);
+  }
+
+  function destroyCharts() {
+    charts.forEach(c => c.destroy());
+    charts = [];
+  }
+
+  function reset() {
+    destroyCharts();
+    document.getElementById('setupView').style.display = '';
+    document.getElementById('dashView').classList.remove('on');
+    document.getElementById('dashContent').style.display = 'none';
+    document.getElementById('spinner').style.display = '';
+    document.getElementById('errorBox').style.display = 'none';
+    document.getElementById('connectBtn').disabled = false;
+  }
+
+  async function cloverGet(base, mid, token, path, params = {}) {
+    const url = new URL(`${base}/v3/merchants/${mid}/${path}`);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const r = await fetch(url.toString(), {
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+    if (!r.ok) {
+      let msg = `Clover API error ${r.status}: ${r.statusText}`;
+      if (r.status === 401) msg = 'Unauthorized (401) — check your API key and scopes: ORDERS_R, PAYMENTS_R, CUSTOMERS_R.';
+      if (r.status === 403) msg = 'Forbidden (403) — your token may be missing required permissions.';
+      if (r.status === 404) msg = 'Not found (404) — double-check your Merchant ID.';
+      throw new Error(msg);
+    }
+    return r.json();
+  }
+
+  async function connect() {
+    const mid    = document.getElementById('merchantId').value.trim();
+    const token  = document.getElementById('apiKey').value.trim();
+    const base   = document.getElementById('envSelect').value;
+    const days   = parseInt(document.getElementById('rangeSelect').value);
+    const errBox = document.getElementById('errorBox');
+    errBox.style.display = 'none';
+
+    if (!mid || !token) {
+      errBox.textContent = 'Please enter both your Merchant ID and API key.';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('connectBtn').disabled = true;
+    document.getElementById('setupView').style.display = 'none';
+    document.getElementById('dashView').classList.add('on');
+    document.getElementById('spinner').style.display = '';
+    document.getElementById('dashContent').style.display = 'none';
+    document.getElementById('merchantBadge').textContent = mid;
+
+    try {
+      const now     = Date.now();
+      const startMs = now - days * 86400 * 1000;
+      const filter  = `createdTime>=${startMs}`;
+
+      const [ordersResp, customersResp, paymentsResp] = await Promise.all([
+        cloverGet(base, mid, token, 'orders',    { limit: 1000, filter }),
+        cloverGet(base, mid, token, 'customers', { limit: 200 }),
+        cloverGet(base, mid, token, 'payments',  { limit: 1000, filter })
+      ]);
+
+      const orders    = ordersResp.elements    || [];
+      const customers = customersResp.elements || [];
+      const payments  = paymentsResp.elements  || [];
+
+      const totalRevenue = orders.reduce((s, o) => s + (o.total || 0), 0);
+      const avgOrder     = orders.length ? totalRevenue / orders.length : 0;
+
+      document.getElementById('metricsRow').innerHTML = `
+        <div class="metric-card green">
+          <div class="metric-label">Total revenue</div>
+          <div class="metric-value">${fmt(totalRevenue)}</div>
+          <div class="metric-sub">Last ${days} days</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total orders</div>
+          <div class="metric-value">${orders.length.toLocaleString()}</div>
+          <div class="metric-sub">Last ${days} days</div>
+        </div>
+        <div class="metric-card orange">
+          <div class="metric-label">Avg order value</div>
+          <div class="metric-value">${fmt(Math.round(avgOrder))}</div>
+          <div class="metric-sub">Per transaction</div>
+        </div>
+        <div class="metric-card blue">
+          <div class="metric-label">Customers</div>
+          <div class="metric-value">${customers.length.toLocaleString()}</div>
+          <div class="metric-sub">On account</div>
+        </div>
+      `;
+
+      const dayMap = {};
+      orders.forEach(o => {
+        const d = new Date(o.createdTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (!dayMap[d]) dayMap[d] = { rev: 0, count: 0 };
+        dayMap[d].rev   += (o.total || 0);
+        dayMap[d].count += 1;
+      });
+      const sortedDays = Object.keys(dayMap).sort((a, b) => new Date(a) - new Date(b));
+      const dayRevs    = sortedDays.map(d => Math.round((dayMap[d].rev / 100) * 100) / 100);
+      const dayCounts  = sortedDays.map(d => dayMap[d].count);
+
+      document.getElementById('revSubtitle').textContent =
+        sortedDays.length ? `${sortedDays[0]} – ${sortedDays[sortedDays.length - 1]}` : '';
+      document.getElementById('ordSubtitle').textContent = `${orders.length} orders total`;
+
+      const custName  = {};
+      const custSpend = {};
+      customers.forEach(c => {
+        if (c.id) custName[c.id] = [c.firstName, c.lastName].filter(Boolean).join(' ') || 'Guest';
+      });
+      orders.forEach(o => {
+        const cid  = o.customers?.elements?.[0]?.id || '__guest__';
+        const name = custName[cid] || 'Guest / walk-in';
+        custSpend[name] = (custSpend[name] || 0) + (o.total || 0);
+      });
+      const top10      = Object.entries(custSpend).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      const custLabels = top10.map(([n]) => n.length > 24 ? n.slice(0, 22) + '…' : n);
+      const custVals   = top10.map(([, v]) => Math.round(v / 100 * 100) / 100);
+      const custHeight = Math.max(180, top10.length * 46 + 60);
+      document.getElementById('topCustWrap').style.height = custHeight + 'px';
+
+      const payTotals = {};
+      payments.forEach(p => {
+        const t = p.tender?.label || p.result || 'Other';
+        payTotals[t] = (payTotals[t] || 0) + (p.amount || 0);
+      });
+      const payLabels = Object.keys(payTotals);
+      const payVals   = payLabels.map(k => Math.round(payTotals[k] / 100 * 100) / 100);
+      const totalPay  = payVals.reduce((a, b) => a + b, 0);
+
+      const PALETTE = ['#1a5c3a','#c45c1a','#1a3d6e','#7c3aed','#b45309','#0e7490','#be185d'];
+
+      document.getElementById('payLegend').innerHTML = payLabels.map((l, i) => {
+        const pct = totalPay ? ((payVals[i] / totalPay) * 100).toFixed(1) : '0.0';
+        return `<span>
+          <span class="legend-dot" style="background:${PALETTE[i % PALETTE.length]};border-radius:2px;display:inline-block;"></span>
+          ${l} — ${pct}%
+        </span>`;
+      }).join('');
+
+      destroyCharts();
+      const gridColor = 'rgba(0,0,0,0.06)';
+      const tickColor = '#9e9b94';
+
+      charts.push(new Chart(document.getElementById('revenueChart'), {
+        type: 'line',
+        data: {
+          labels: sortedDays,
+          datasets: [{
+            label: 'Revenue', data: dayRevs,
+            borderColor: '#1a5c3a', backgroundColor: 'rgba(26,92,58,0.07)',
+            borderWidth: 2, fill: true, tension: 0.38,
+            pointRadius: 3, pointBackgroundColor: '#1a5c3a'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.y.toFixed(2) } } },
+          scales: {
+            y: { ticks: { callback: v => fmtShort(v), color: tickColor }, grid: { color: gridColor } },
+            x: { ticks: { maxTicksLimit: 8, maxRotation: 30, color: tickColor }, grid: { display: false } }
+          }
+        }
+      }));
+
+      charts.push(new Chart(document.getElementById('ordersChart'), {
+        type: 'bar',
+        data: {
+          labels: sortedDays,
+          datasets: [{
+            label: 'Orders', data: dayCounts,
+            backgroundColor: 'rgba(196,92,26,0.65)', borderColor: '#c45c1a',
+            borderWidth: 1, borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { stepSize: 1, color: tickColor }, grid: { color: gridColor } },
+            x: { ticks: { maxTicksLimit: 8, maxRotation: 30, color: tickColor }, grid: { display: false } }
+          }
+        }
+      }));
+
+      charts.push(new Chart(document.getElementById('topCustChart'), {
+        type: 'bar',
+        data: {
+          labels: custLabels,
+          datasets: [{
+            label: 'Total spend', data: custVals,
+            backgroundColor: custVals.map((_, i) => i === 0 ? '#1a3d6e' : 'rgba(26,61,110,0.45)'),
+            borderColor: '#1a3d6e', borderWidth: 1, borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.x.toFixed(2) } } },
+          scales: {
+            x: { ticks: { callback: v => '$' + v.toLocaleString(), color: tickColor }, grid: { color: gridColor } },
+            y: { ticks: { font: { size: 12 }, color: tickColor }, grid: { display: false } }
+          }
+        }
+      }));
+
+      charts.push(new Chart(document.getElementById('payChart'), {
+        type: 'doughnut',
+        data: {
+          labels: payLabels,
+          datasets: [{
+            data: payVals,
+            backgroundColor: PALETTE.slice(0, payLabels.length),
+            borderWidth: 3, borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.label + ': $' + ctx.parsed.toFixed(2) } } },
+          cutout: '60%'
+        }
+      }));
+
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('dashContent').style.display = 'block';
+
+    } catch (err) {
+      destroyCharts();
+      document.getElementById('dashView').classList.remove('on');
+      document.getElementById('setupView').style.display = '';
+      document.getElementById('connectBtn').disabled = false;
+      const errBox = document.getElementById('errorBox');
+      errBox.textContent = err.message || 'Connection failed. Check your credentials and try again.';
+      errBox.style.display = 'block';
+    }
+  }
+</script>
+</body>
+</html>
