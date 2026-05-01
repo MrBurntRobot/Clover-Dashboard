@@ -365,7 +365,7 @@
   }
 
   async function cloverGet(base, mid, token, path, params = {}) {
-    const url = new URL(`https://clover-proxy.ari-maggi.workers.dev/${mid}/${path}`);
+    const url = new URL(`${base}/v3/merchants/${mid}/${path}`);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     const r = await fetch(url.toString(), {
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
